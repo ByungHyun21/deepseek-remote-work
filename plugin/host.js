@@ -23,12 +23,12 @@ export const name = "deepseek-remote-work";
 export const inject = ["webServer"];
 
 export const Config = z.object({
-  /** ssh + ACP 왕복 전체 상한 (ms). */
-  timeoutMs: z.number().int().min(2000).max(120000).default(25000).volatile(),
+  /** ssh + ACP 왕복 전체 상한 (ms). 정수는 schemastery 에서 natural 을 쓴다. */
+  timeoutMs: z.natural().min(2000).max(120000).default(25000).volatile(),
   sshBin: z.string().default("ssh").volatile(),
   /** 원격에서 실행할 명령. 비로그인 셸 PATH 에 dsh 가 없으면 절대 경로를 넣는다. */
   remoteCommand: z.string().default("dsh --profile acp").volatile(),
-  maxHosts: z.number().int().min(1).max(50).default(12).volatile(),
+  maxHosts: z.natural().min(1).max(50).default(12).volatile(),
 });
 
 const ROUTE = "/remote-work";
@@ -99,7 +99,7 @@ export function apply(ctx, config) {
     return call;
   };
 
-  const handler = async (req, res) => {
+  const route = async (req, res) => {
     let url;
     try {
       url = new URL(req.url ?? "/", "http://remote-work");
@@ -137,6 +137,17 @@ export function apply(ctx, config) {
     }
 
     return send(res, 404, { error: "없습니다." });
+  };
+
+  // 핸들러가 던지면 응답이 통째로 사라진다. 화면이 상태를 붙일 수 있게
+  // 실패도 JSON 으로 되돌려보낸다 (이미 응답을 시작한 경우 건드리지 않는다).
+  const handler = async (req, res) => {
+    try {
+      await route(req, res);
+    } catch (error) {
+      if (res.headersSent || res.writableEnded) return;
+      send(res, 500, { error: `서버 오류: ${error.message}` });
+    }
   };
 
   ctx.effect(() => ctx.webServer.register({ kind: "prefix", path: ROUTE, handler }), "deepseek-remote-work: api");

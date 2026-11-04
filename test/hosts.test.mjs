@@ -5,12 +5,17 @@ import { validateHost, parseDocument, createHostsStore, hasBadPathChar } from ".
 /** fs 를 흉내 내는 최소 객체. 저장 경로의 원자성만 보면 된다. */
 function fakeFs(files = {}) {
   const written = [];
+  const dirs = [];
   return {
     files,
     written,
+    dirs,
     readFileSync: (p) => {
       if (!(p in files)) throw Object.assign(new Error("ENOENT"), { code: "ENOENT" });
       return files[p];
+    },
+    mkdirSync: (p) => {
+      dirs.push(p);
     },
     writeFileSync: (p, data) => {
       written.push([p, data]);
@@ -91,6 +96,8 @@ test("저장된 파일을 다시 읽는다 (round-trip)", () => {
   const reopened = createHostsStore({ file, fs, maxHosts: 5 });
   const list = reopened.list();
   assert.equal(list.length, 1);
+  // 디렉터리가 없는 첫 저장에서도 죽으면 안 된다.
+  assert.deepEqual(fs.dirs, ["/x"]);
   assert.deepEqual(list[0], {
     id: added.host.id,
     label: "A",

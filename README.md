@@ -87,6 +87,12 @@ npm test   # node:test — 런타임 의존성 불필요
 - `test/hosts.test.mjs` — 명부 검증, `-` 주입 거절, 파일 라운드트립, 용량
 - `test/acp.test.mjs` — NDJSON 프레임 분해, ssh argv 규격(`-t` 금지 포함)
 
+고쳐가며 시험할 때: `dsh plugin add file:…` 는 패키지를 **복사**하므로, 소스를 고치면 `remove` 후 다시 `add` 해야 반영됩니다. 다른 포트·다른 `DSH_HOME`으로 띄우면 실제 서버를 건드리지 않고 확인할 수 있습니다.
+
+```bash
+DSH_HOME=/tmp/dsh-rw-test dsh --profile web --no-open --host 127.0.0.1 --port 3099
+```
+
 ## 라이선스
 
 MIT — [LICENSE](LICENSE). 이 저장소의 코드는 다른 프로젝트에서 복사하지 않았습니다. 원격 조종 채널로 사용한 [ACP](https://agentclientprotocol.com) 와 DSH 의 `dsh-acp` 프로필은 DSH 자체 기능입니다.
