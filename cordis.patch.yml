@@ -1,0 +1,21 @@
+# deepseek-remote-work bundle patch — 한 행.
+#
+# 설치:
+#   dsh plugin --profile web add github:ByungHyun21/deepseek-remote-work
+# 재시작:
+#   systemctl --user restart dsh-web   (또는 dsh --profile web 재기동)
+#
+# 값은 전부 선택이다. 켜고 끄는 스위치는 없고, 명부가 비어 있으면 화면에
+# "이 서버" 항목만 보인다.
+
+- insert:
+    - id: remote-work
+      name: deepseek-remote-work
+      config:
+        # ssh + ACP 왕복 전체 상한. 이 안에 원격 ssh 붙기 + 악수 + 목록 조회가 들어간다.
+        timeoutMs: 25000
+        sshBin: ssh
+        # 원격의 비로그인 셸 PATH 에 dsh 가 없으면 절대 경로를 적는다.
+        # 예: /home/yoon/.local/bin/dsh
+        remoteCommand: dsh --profile acp
+        maxHosts: 12
