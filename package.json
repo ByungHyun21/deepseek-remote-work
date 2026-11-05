@@ -1,6 +1,6 @@
 {
   "name": "deepseek-remote-work",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "DeepSeek Harness 사이드바에 원격 머신 전환을 추가하는 뷰어 플러그인. 호스트 등록/선택과 원격 DSH 세션 목록(읽기 전용)을 제공한다.",
   "type": "module",
   "main": "plugin/host.js",
@@ -20,21 +20,39 @@
     "check": "node --check plugin/host.js && node --check lib/hosts.js && node --check lib/acp.js && node --check lib/client.js",
     "test": "npm run check && node --test \"test/*.test.mjs\""
   },
-  "keywords": ["dsh", "deepseek-harness", "plugin", "remote", "acp", "sidebar"],
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "remote",
+    "acp",
+    "sidebar"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ByungHyun21/deepseek-remote-work.git"
   },
-  "bugs": { "url": "https://github.com/ByungHyun21/deepseek-remote-work/issues" },
+  "bugs": {
+    "url": "https://github.com/ByungHyun21/deepseek-remote-work/issues"
+  },
   "homepage": "https://github.com/ByungHyun21/deepseek-remote-work#readme",
-  "engines": { "node": ">=22.19.0" },
+  "engines": {
+    "node": ">=22.19.0"
+  },
   "dsh": {
-    "engines": { "dsh": ">=0.2.1-rc.5 <0.3.0" },
-    "bundle": { "patch": "./cordis.patch.yml" },
+    "engines": {
+      "dsh": ">=0.2.1-rc.5 <0.3.0"
+    },
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
     "client": {
       "platform": "web",
-      "inject": ["@deepseek-ai/dsh-client-ui-theme", "@deepseek-ai/dsh-client-ui-renderer"]
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-theme",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
     }
   },
   "dependencies": {
