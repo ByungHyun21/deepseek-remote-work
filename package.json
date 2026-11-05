@@ -1,6 +1,6 @@
 {
   "name": "deepseek-remote-work",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "DeepSeek Harness 사이드바에 원격 머신 전환을 추가하는 뷰어 플러그인. 호스트 등록/선택과 원격 DSH 세션 목록(읽기 전용)을 제공한다.",
   "type": "module",
   "main": "plugin/host.js",
