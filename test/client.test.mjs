@@ -55,7 +55,7 @@ function boot() {
     window: { __ModuleLoader__: { load: (entry) => registered.push(entry) } },
     document: {
       getElementById: () => null,
-      createElement: () => ({ id: "", textContent: "", remove() {} }),
+      createElement: () => ({ id: "", textContent: "", removed: false, remove() { this.removed = true; } }),
       head: { append: (node) => appended.push(node) },
     },
     fetch: async () => ({ ok: true, json: async () => ({ hosts: [] }) }),
@@ -115,6 +115,17 @@ test("CSS 는 materialize 시점에 한 번 주입된다", () => {
   assert.match(appended[0].textContent, /\.dshr-page/);
 });
 
+test("스타일은 붙자마자 지우지 않고, 정리 함수에서만 지운다", () => {
+  const { effects, appended } = apply();
+  const mount = effects.find((effect) => /style/.test(effect.label));
+  assert.ok(mount, "스타일 effect 가 없다");
+  const cleanup = mount.fn();
+  assert.equal(typeof cleanup, "function", "정리 함수를 돌려주지 않는다");
+  assert.equal(appended[0].removed, false, "apply 직후 스타일이 사라졌다 — 페이지가 무스타일로 뜬다");
+  cleanup();
+  assert.equal(appended[0].removed, true, "언마운트에서 스타일을 지우지 않는다");
+});
+
 test("nav 패널 행 + main 패널 두 좌석에 앉는다", () => {
   const { registrations } = apply();
   const bySeat = Object.fromEntries(registrations.map((r) => [r.options.name, r]));
@@ -155,7 +166,8 @@ test("아이콘 컴포넌트는 svg 를, 패널 본문은 페이지를 렌더한
   assert.deepEqual(Object.keys(injected).sort(), ["actions", "store"]);
   const view = page.component({ store, actions });
   assert.ok(findAll(view, "dshr-page").length >= 1, "패널 본문 루트가 없다");
-  assert.ok(findAll(view, "dshr-row").length >= 2, "이 서버 + 호스트 행이 있어야 한다");
+  assert.ok(findAll(view, "dshr-local").length >= 1, "이 서버 카드가 없다");
+  assert.ok(findAll(view, "dshr-hostCard").length >= 1, "원격 호스트 카드가 없다");
 });
 
 /* ── 디자인 회귀 ──────────────────────────────────────────────────────────
@@ -214,27 +226,28 @@ test("제목은 20px/500 + 설명 한 줄 — 자동화 작업·플러그인 화
   assert.equal(findAll(view, "dshr-intro").length, 1, "제목 아래 설명 줄이 없다");
 });
 
-test("행 hover 와 선택은 같은 셸 토큰이고, 눌렀을 때 영역은 stretched-link 버튼이다", () => {
+test("카드 hover 와 선택은 같은 셸 토큰이고, 눌렀을 때 영역은 카드 전체 버튼이다", () => {
   const css = cssOf();
-  assert.match(css, /\.dshr-row:hover\{background:var\(--dsw-alias-interactive-bg-hover\)\}/);
-  assert.match(css, /\.dshr-row\.sel\{background:var\(--dsw-alias-interactive-bg-hover\)\}/);
+  assert.match(css, /\.dshr-hostCard:hover\{background:var\(--dsw-alias-interactive-bg-hover\)\}/);
+  assert.match(css, /\.dshr-hostCard\.sel\{background:var\(--dsw-alias-interactive-bg-hover\)/);
+  assert.match(css, /\.dshr-local\.sel\{border-color:color-mix/);
   const view = renderPage(STATE);
-  assert.ok(findAll(view, "dshr-rowOpen").length >= 2, "행 전체를 누르는 버튼이 없다");
-  assert.ok(findAll(view, "dshr-rowEnd").length >= 1, "삭제 버튼이 행 위에 얹히지 않았다 (button 안의 button 은 부적합)");
+  assert.ok(findAll(view, "dshr-cardHit").length >= 1, "카드 전체를 누르는 버튼이 없다");
+  assert.ok(findAll(view, "dshr-rowEnd").length >= 1, "삭제 버튼이 카드 위에 얹히지 않았다 (button 안의 button 은 부적합)");
 });
 
-test("입력은 자동화 작업의 설정 카드 배선이다 (라벨·hairline·48px 행)", () => {
+test("입력은 카드 안 2열 폼이다 (라벨 위 · 입력 아래, 셸 입력 토큰)", () => {
   const css = cssOf();
-  assert.match(css, /\.dshr-field\{justify-content:space-between;align-items:center;gap:12px;min-height:48px;display:flex\}/);
-  assert.match(css, /\.dshr-field\+\.dshr-field\{border-top:\.5px solid var\(--dsw-alias-border-l3\)\}/);
+  assert.match(css, /\.dshr-formInput\{[^}]*border:\.5px solid var\(--dsw-alias-border-l3\)/);
+  assert.match(css, /\.dshr-formGrid\{display:grid;grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
   const view = renderPage({ ...STATE, adding: true });
-  assert.equal(findExactly(view, "dshr-card").length, 1);
-  assert.equal(findExactly(view, "dshr-field").length, 5, "이름·주소·포트·사용자·작업 경로");
-  for (const input of findAll(view, "dshr-fieldInput")) {
+  assert.equal(findExactly(view, "dshr-formCard").length, 1);
+  assert.equal(findExactly(view, "dshr-formField").length, 5, "이름·주소·포트·사용자·작업 경로");
+  for (const input of findAll(view, "dshr-formInput")) {
     assert.ok(input.props.id, "입력에 id 가 없다 — 라벨과 이어지지 않는다");
   }
-  for (const label of findAll(view, "dshr-fieldLabel")) {
-    assert.ok(label.props.htmlFor, "라벨이 입력과 연결되지 않았다");
+  for (const field of findExactly(view, "dshr-formField")) {
+    assert.ok(field.props.htmlFor, "라벨이 입력과 연결되지 않았다");
   }
 });
 

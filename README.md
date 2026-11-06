@@ -22,6 +22,18 @@ DSH 코어는 이미 이 길을 열어두고 있습니다 — `dsh --profile acp
 - **선택은 브라우저**에 둡니다 (localStorage). 폰에서 골랐다고 PC 화면이 따라 바뀌면 안 되기 때문입니다.
 - 세션 목록은 요청마다 원격에 잠깐 붙었다 떼고, 그 ssh 는 `-t` 없이 실행됩니다(PTY 가 NDJSON 줄을 망가뜨립니다).
 
+## 화면
+
+![작업 대상 — 이 서버 카드와 점선 빈 상태](docs/screen.png)
+
+호스트를 등록하면 카드 그리드로 쌓이고, 카드를 누르면 오른쪽에 그 원격의 세션이 열립니다.
+
+![원격 호스트 카드](docs/hosts.png)
+
+![새 호스트 폼 — 2열 카드](docs/form.png)
+
+![원격 세션 목록](docs/sessions.png)
+
 ## 설치
 
 ```bash
@@ -48,21 +60,25 @@ systemctl --user restart dsh-web   # 패치 방식이라 재시작이 필요합�
 
 | 조각 | 기준 |
 |---|---|
-| 본문 폭·여백 | 가운데 정렬 `max-width:960px`, `padding:0 clamp(24px,4vw,48px) 48px`, `padding-top:28px` (darwin 은 `--dsh-frame-top-clearance` 를 더한다) |
+| 본문 폭·여백 | 가운데 정렬 `max-width:960px`, `padding:0 clamp(24px,4vw,48px) 56px`, `padding-top:28px` (darwin 은 `--dsh-frame-top-clearance` 를 더한다) |
 | 제목 | 20px/500 한 줄 + 그 아래 13px 설명 (`label-secondary`) |
-| 행 | 12px 라운드, hover 와 선택 모두 `--dsw-alias-interactive-bg-hover` (선택에만 색을 얹으면 옆 화면과 다른 앱이 된다) |
-| 눌렀을 때 영역 | 플러그인 화면의 stretched-link (`:after{inset:0}`) — button 안에 button 을 넣지 않는다 |
+| 이 서버 카드 | 14px 라운드, hover 와 선택 모두 `--dsw-alias-interactive-bg-hover`; 선택 카드는 `state-business-primary` 45% 테두리와 7% 배경 |
+| 원격 호스트 카드 | `repeat(auto-fill,minmax(240px,1fr))` 그리드, 아이콘 타일 + 이름 + `user@host` + 작업 경로 |
+| 카드 타일 | 40×40 라운드 타일 + svg glyph (`label-secondary`); 이 서버 타일만 `state-business-primary` 그라데이션 |
+| 눌렀을 때 영역 | 카드 전체를 덮는 투명 버튼(`cardHit`)을 깔고 삭제 버튼은 그 위에 — button 안에 button 을 넣지 않는다 |
 | 버튼 | 공용 Button 의 값: `--dsw-radius-md`, 32px, 13/20, hover 는 `--dsw-alias-button-primary-hover` (자체 `filter:brightness` 금지) |
 | 아이콘 버튼 | 28×28, `--dsw-radius-sm`, `--dsw-alias-label-caption` → hover 시 `label-secondary` |
-| 입력 | 자동화 작업 설정 카드(`ruleRows`) 배선 — hairline 으로 갈린 48px 행, 라벨 왼쪽·값 오른쪽, hover 에서만 배경 |
+| 입력 | 새 호스트 폼 카드 — 라벨 위·입력 아래 2열 그리드, `.5px` 테두리 입력, focus 시 `state-business-primary` 링 (520px 아래 1열) |
 | 안내·실패 | `notice` 카드(`--dsw-specific-sidebar-fill`, 10px 라운드) 위에 실패는 `state-error-primary` |
-| 빈 상태 | glyph(`label-caption`) + title(14px/400) + action 버튼 |
+| 빈 상태 | 점선 카드(`border-l3`) 위 glyph(`label-caption`) + title(14px/500) + hint + action 버튼 |
 | 로딩 | 스켈레톤(`--dsw-alias-bg-skeleton`, 2s pulse) |
-| 디테일 | 오른쪽 47% + 왼쪽 hairline(`border-l4`) + 자체 스크롤, `--gutter` 24/20/16 |
-| 끊점 | 두 화면과 같은 1100 · 760 · 400 (760 아래에서 목록을 접고 디테일을 펼친다) |
-| 초점 | `.dshr-page :focus-visible` 에 `--dsw-focus-ring-color` 링 — 입력·stretched-link 은 자체 링 |
+| 디테일 | 오른쪽 47% + 왼쪽 hairline(`border-l4`) + 자체 스크롤, `--gutter` 24/20/16; 호스트 hero 카드 + 세션 카드 |
+| 끊점 | 두 화면과 같은 1100 · 760 · 400 (760 아래에서 목록을 접고 디테일을 펼친다), 560/520 아래 카드·폼 1열 |
+| 초점 | `.dshr-page :focus-visible` 에 `--dsw-focus-ring-color` 링 — 입력·카드 버튼은 자체 링 |
 
 색과 라운드는 전부 셸의 `--dsw-*` 별칭이라 테마·다크모드를 자동으로 따라간다. 리터럴 색(`#`·`rgb()`)과 `filter:brightness` 는 시험이 막는다 (`test/client.test.mjs` 의 디자인 회귀 항목). 공용 UI 키트(`dsh-client-ui-primitives`)는 각 플러그인 번들에 인라인되어 별도 브라우저 모듈로 뜨지 않으므로, 그 `Button`/`Icon` 을 `require` 하는 길은 없고 위 값을 CSS 로 옮겨 쓰는 것이 현재 방식이다.
+
+스타일 주입은 `ctx.effect` 의 계약을 따른다 — **등록 즉시 콜백이 실행**되므로 `style` 은 먼저 붙이고, 돌려주는 정리 함수에서만 지운다. 한 번 콜백 안에서 `remove()` 했더니 CSS 가 바로 사라져 페이지가 무스타일 텍스트로 떴고, `test/client.test.mjs` 가 그 회귀를 막는다.
 
 ### 원격 쪽 준비 (호스트마다 한 번)
 
@@ -119,7 +135,7 @@ npm test   # node:test — 런타임 의존성 불필요
 
 - `test/hosts.test.mjs` — 명부 검증, `-` 주입 거절, 파일 라운드트립, 용량
 - `test/acp.test.mjs` — NDJSON 프레임 분해, ssh argv 규격(`-t` 금지 포함)
-- `test/client.test.mjs` — 브라우저 모듈 계약, 좌석 두 자리, 그리고 **디자인 회귀**: 리터럴 색 금지, 셸 토큰 사용, 버튼 hover 가 `brightness` 로 새지 않는지, 제목 20px/500, 행 hover=선택, 설정 카드 배선, 끊점 1100/760/400
+- `test/client.test.mjs` — 브라우저 모듈 계약, 좌석 두 자리, 스타일 수명(주입 직후 사라지지 않음), 그리고 **디자인 회귀**: 리터럴 색 금지, 셸 토큰 사용, 버튼 hover 가 `brightness` 로 새지 않는지, 제목 20px/500, 카드 hover=선택, 폼 카드 2열, 끊점 1100/760/400
 
 고쳐가며 시험할 때: `dsh plugin add file:…` 는 패키지를 **복사**하므로, 소스를 고치면 `remove` 후 다시 `add` 해야 반영됩니다. 다른 포트·다른 `DSH_HOME`으로 띄우면 실제 서버를 건드리지 않고 확인할 수 있습니다.
 
